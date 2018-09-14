@@ -33,6 +33,9 @@ public abstract class JZMediaInterface {
 
     public abstract long getDuration();
 
+    /**
+     * 设置播放视频的Surface
+     */
     public abstract void setSurface(Surface surface);
 
     public abstract void setVolume(float leftVolume, float rightVolume);

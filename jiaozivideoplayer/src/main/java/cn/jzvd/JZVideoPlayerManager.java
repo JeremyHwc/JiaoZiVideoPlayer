@@ -33,6 +33,9 @@ public class JZVideoPlayerManager {
         return getFirstFloor();
     }
 
+    /**
+     *  结束当前的播放状态
+     */
     public static void completeAll() {
         if (SECOND_FLOOR_JZVD != null) {
             SECOND_FLOOR_JZVD.onCompletion();

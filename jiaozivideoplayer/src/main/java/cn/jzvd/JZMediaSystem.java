@@ -10,8 +10,18 @@ import java.util.Map;
 /**
  * Created by Nathen on 2017/11/8.
  * 实现系统的播放引擎
+ * 播放相关的逻辑只与MediaPlayer的播放状态和调用方法相关，而界面展示和UI操作很多时候都
+ * 需要根据自己项目来定制。参考原生的VideoView，为了解耦和方便定制，把MediaPlayer的播放
+ * 逻辑和UI界面展示及操作相关的逻辑分离。
  */
-public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPreparedListener, MediaPlayer.OnCompletionListener, MediaPlayer.OnBufferingUpdateListener, MediaPlayer.OnSeekCompleteListener, MediaPlayer.OnErrorListener, MediaPlayer.OnInfoListener, MediaPlayer.OnVideoSizeChangedListener {
+public class JZMediaSystem extends JZMediaInterface implements
+        MediaPlayer.OnPreparedListener,//准备监听
+        MediaPlayer.OnCompletionListener,//播放完成监听
+        MediaPlayer.OnBufferingUpdateListener,//缓冲更新监听如果播放的是网络资源，Started状态下也会自动调用客户端注册的OnBufferingUpdateListener.OnBufferingUpdate()回调方法，对流播放缓冲的状态进行追踪。
+        MediaPlayer.OnSeekCompleteListener,//seek完成监听
+        MediaPlayer.OnErrorListener,//播放错误监听
+        MediaPlayer.OnInfoListener,//	指示信息和警告信息监听
+        MediaPlayer.OnVideoSizeChangedListener {//视频尺寸变化监听
 
     public MediaPlayer mediaPlayer;
 
@@ -26,12 +36,12 @@ public class JZMediaSystem extends JZMediaInterface implements MediaPlayer.OnPre
             mediaPlayer = new MediaPlayer();
             mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             if (dataSourceObjects.length > 1) {
-                mediaPlayer.setLooping((boolean) dataSourceObjects[1]);
+                mediaPlayer.setLooping((boolean) dataSourceObjects[1]);//是否循环播放
             }
             mediaPlayer.setOnPreparedListener(JZMediaSystem.this);
             mediaPlayer.setOnCompletionListener(JZMediaSystem.this);
             mediaPlayer.setOnBufferingUpdateListener(JZMediaSystem.this);
-            mediaPlayer.setScreenOnWhilePlaying(true);
+            mediaPlayer.setScreenOnWhilePlaying(true);//设置屏幕敞亮
             mediaPlayer.setOnSeekCompleteListener(JZMediaSystem.this);
             mediaPlayer.setOnErrorListener(JZMediaSystem.this);
             mediaPlayer.setOnInfoListener(JZMediaSystem.this);

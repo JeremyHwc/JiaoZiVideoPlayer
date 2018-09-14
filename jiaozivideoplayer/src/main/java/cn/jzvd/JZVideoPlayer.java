@@ -34,8 +34,12 @@ import java.util.TimerTask;
 
 /**
  * Created by Nathen on 16/7/30.
+ * 实现了视频播放器的View相关的内容。
  */
-public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickListener, SeekBar.OnSeekBarChangeListener, View.OnTouchListener {
+public abstract class JZVideoPlayer extends FrameLayout implements
+        View.OnClickListener,
+        SeekBar.OnSeekBarChangeListener,
+        View.OnTouchListener {
 
     public static final String TAG = "JiaoZiVideoPlayer";
     public static final int THRESHOLD = 80;
@@ -68,31 +72,8 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
     public static int VIDEO_IMAGE_DISPLAY_TYPE = 0;
     public static long CLICK_QUIT_FULLSCREEN_TIME = 0;
     public static long lastAutoFullscreenTime = 0;
-    public static AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {//是否新建个class，代码更规矩，并且变量的位置也很尴尬
-        @Override
-        public void onAudioFocusChange(int focusChange) {
-            switch (focusChange) {
-                case AudioManager.AUDIOFOCUS_GAIN:
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS:
-                    releaseAllVideos();
-                    Log.d(TAG, "AUDIOFOCUS_LOSS [" + this.hashCode() + "]");
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                    try {
-                        if (JZVideoPlayerManager.getCurrentJzvd().currentState == JZVideoPlayer.CURRENT_STATE_PLAYING) {
-                            JZVideoPlayerManager.getCurrentJzvd().startButton.performClick();
-                        }
-                    } catch (IllegalStateException e) {
-                        e.printStackTrace();
-                    }
-                    Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT [" + this.hashCode() + "]");
-                    break;
-                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                    break;
-            }
-        }
-    };
+
+
     protected static JZUserAction JZ_USER_EVENT;
     protected static Timer UPDATE_PROGRESS_TIMER;
     public int currentState = -1;
@@ -126,6 +107,32 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
     protected float mGestureDownBrightness;
     protected long mSeekTimePosition;
     boolean tmp_test_back = false;
+
+    public static AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {//是否新建个class，代码更规矩，并且变量的位置也很尴尬
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            switch (focusChange) {
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS:
+                    releaseAllVideos();
+                    Log.d(TAG, "AUDIOFOCUS_LOSS [" + this.hashCode() + "]");
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    try {
+                        if (JZVideoPlayerManager.getCurrentJzvd().currentState == JZVideoPlayer.CURRENT_STATE_PLAYING) {
+                            JZVideoPlayerManager.getCurrentJzvd().startButton.performClick();
+                        }
+                    } catch (IllegalStateException e) {
+                        e.printStackTrace();
+                    }
+                    Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT [" + this.hashCode() + "]");
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                    break;
+            }
+        }
+    };
 
     public JZVideoPlayer(Context context) {
         super(context);
@@ -594,18 +601,28 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
         return false;
     }
 
+    /**
+     * 开始播放视频
+     */
     public void startVideo() {
+        //结束当前的播放状态
         JZVideoPlayerManager.completeAll();
         Log.d(TAG, "startVideo [" + this.hashCode() + "] ");
+        //初始化添加用来视频播放的TextureView
         initTextureView();
         addTextureView();
+
+        //设置音频管理
         AudioManager mAudioManager = (AudioManager) getContext().getSystemService(Context.AUDIO_SERVICE);
         mAudioManager.requestAudioFocus(onAudioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+        //设置屏幕常亮
         JZUtils.scanForActivity(getContext()).getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        //为MediaManager设置播放相关的配置信息
         JZMediaManager.setDataSource(dataSourceObjects);
         JZMediaManager.setCurrentDataSource(JZUtils.getCurrentFromDataSource(dataSourceObjects, currentUrlMapIndex));
         JZMediaManager.instance().positionInList = positionInList;
+        //开始播放状态准备
         onStatePreparing();
         JZVideoPlayerManager.setFirstFloor(this);
     }
@@ -709,6 +726,9 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
         Log.d(TAG, "onInfo what - " + what + " extra - " + extra);
     }
 
+    /**
+     * 播放过程发生错误的回调
+     */
     public void onError(int what, int extra) {
         Log.e(TAG, "onError " + what + " - " + extra + " [" + this.hashCode() + "] ");
         if (what != 38 && extra != -38 && what != -38 && extra != 38 && extra != -19) {
@@ -889,6 +909,10 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
         totalTimeTextView.setText(JZUtils.stringForTime(duration));
     }
 
+    /**
+     * 设置缓存进度
+     * @param bufferProgress 缓存进度
+     */
     public void setBufferProgress(int bufferProgress) {
         if (bufferProgress != 0) progressBar.setSecondaryProgress(bufferProgress);
     }
@@ -951,8 +975,8 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
             vpup.requestDisallowInterceptTouchEvent(false);
             vpup = vpup.getParent();
         }
-        if (currentState != CURRENT_STATE_PLAYING &&
-                currentState != CURRENT_STATE_PAUSE) return;
+        if (currentState != CURRENT_STATE_PLAYING && currentState != CURRENT_STATE_PAUSE)
+            return;
         long time = seekBar.getProgress() * getDuration() / 100;
         JZMediaManager.seekTo(time);
         Log.i(TAG, "seekTo " + time + " [" + this.hashCode() + "] ");
@@ -960,6 +984,7 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+
     }
 
     public void startWindowFullscreen() {
@@ -1034,7 +1059,8 @@ public abstract class JZVideoPlayer extends FrameLayout implements View.OnClickL
 
     public boolean isCurrentPlay() {
         return isCurrentJZVD()
-                && JZUtils.dataSourceObjectsContainsUri(dataSourceObjects, JZMediaManager.getCurrentDataSource());//不仅正在播放的url不能一样，并且各个清晰度也不能一样
+                && JZUtils.dataSourceObjectsContainsUri(dataSourceObjects, JZMediaManager.getCurrentDataSource());
+        //不仅正在播放的url不能一样，并且各个清晰度也不能一样
     }
 
     public boolean isCurrentJZVD() {

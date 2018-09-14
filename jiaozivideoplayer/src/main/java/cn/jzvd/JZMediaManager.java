@@ -10,8 +10,11 @@ import android.view.Surface;
 import android.view.TextureView;
 
 /**
- * 这个类用来和jzvd互相调用，当jzvd需要调用Media的时候调用这个类，当MediaPlayer有回调的时候，通过这个类回调JZVD
+ * 这个类用来和jzvd互相调用，当jzvd需要调用Media的时候调用这个类，
+ * 当MediaPlayer有回调的时候，通过这个类回调JZVD
  * Created by Nathen on 2017/11/18.
+ * 用来对于MediaPlayer的管理，对于MediaPlayer的一些监听器方法的回调
+ * 和TextrueView的相关回调处理。
  */
 public class JZMediaManager implements TextureView.SurfaceTextureListener {
 
@@ -104,6 +107,9 @@ public class JZMediaManager implements TextureView.SurfaceTextureListener {
         mMediaHandler.sendMessage(msg);
     }
 
+    /**
+     * SurfaceTexture准备就绪
+     */
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int i, int i1) {
         Log.i(TAG, "onSurfaceTextureAvailable [" + JZVideoPlayerManager.getCurrentJzvd().hashCode() + "] ");
@@ -115,16 +121,24 @@ public class JZMediaManager implements TextureView.SurfaceTextureListener {
         }
     }
 
+    /**
+     * SurfaceTexture缓冲大小变化
+     */
     @Override
     public void onSurfaceTextureSizeChanged(SurfaceTexture surfaceTexture, int i, int i1) {
-
     }
 
+    /**
+     * SurfaceTexture即将被销毁
+     */
     @Override
     public boolean onSurfaceTextureDestroyed(SurfaceTexture surfaceTexture) {
         return savedSurfaceTexture == null;
     }
 
+    /**
+     * SurfaceTexture通过updateImage更新
+     */
     @Override
     public void onSurfaceTextureUpdated(SurfaceTexture surfaceTexture) {
 
